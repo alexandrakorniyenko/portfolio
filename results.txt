@@ -1,0 +1,41 @@
+/Library/Frameworks/Python.framework/Versions/3.6/bin/python3.6 /Users/PycharmProjects/test/test2.py
+-0.00164419671129 0.0390544689532 0.0220185449438 0.0105299662095 0.0151778228021
+[mpf('0.33067978855343594'), 0, mpf('0.66932021144656406')]
+(mpf('0.66932021144656406'), mpf('0.33067978855343594'), 0, 2)
+Iteration limit exceeded    (Exit mode 9)
+            Current function value: -0.01419375882588587
+            Iterations: 5001
+            Function evaluations: 43483
+            Gradient evaluations: 5001
+     fun: -0.01419375882588587
+     jac: array([0.00164419671129026, -0.0390544689532237, -0.0220185449438437], dtype=object)
+ message: 'Iteration limit exceeded'
+    nfev: 43483
+     nit: 5001
+    njev: 5001
+  status: 9
+ success: False
+       x: array([ 0.51484726,  0.25580718,  0.22934556])
+
+Process finished with exit code 0
+
+
+
+/Library/Frameworks/Python.framework/Versions/3.6/bin/python3.6 /Users/PycharmProjects/test/test2.py
+-0.00164419671129 0.0390544689532 0.0220185449438 0.0105299662095 0.0151778228021
+[mpf('0.18474468874231051'), 0, mpf('0.81525531125768949')]
+(mpf('0.18474468874231051'), mpf('0.81525531125768949'), 0, 2)
+Optimization terminated successfully.    (Exit mode 0)
+            Current function value: -0.017646979101976233
+            Iterations: 202
+            Function evaluations: 1861
+            Gradient evaluations: 198
+     fun: -0.017646979101976233
+     jac: array([0.00164419671129026, -0.0390544689532237, -0.0220185449438437], dtype=object)
+ message: 'Optimization terminated successfully.'
+    nfev: 1861
+     nit: 202
+    njev: 198
+  status: 0
+ success: True
+       x: array([  1.84744689e-01,   8.01091554e-11,   8.15255311e-01])
