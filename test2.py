@@ -5,6 +5,8 @@ import numpy as np
 from scipy.optimize import fsolve
 from math import *
 from sympy import *
+import time
+
 KO =np.array([43.59,   43.15,   42.44,   41.96,  41.57, 41.46,  40.3,    42.40,   42.32,   43.43,   43.63,   45.33,   44.60])
 APL = np.array([ 156.10,    143.65 ,    143.66 ,   136.99,    121.35,     115.82,     110.52,    113.54,     113.05, 106.10, 104.21, 95.60, 99.86])
 MSFT = np.array([68.38,    68.46,    65.86,  63.98,    64.65,   62.14,  60.26,   59.92,     57.60,     57.46,   56.68, 51.17 , 53.00])
@@ -324,8 +326,11 @@ class Portfolio():
                        options={'ftol': 1e-4, 'disp': True, "eps": 1e-1, "maxiter": 10000})
             return(res1)
 
+start = time.time()
 portfolio = Portfolio([0, 0, 0], [r_KO, r_APL, r_MSFT], [r1_KO, r1_APL, r1_MSFT], [r2_KO, r2_APL, r2_MSFT], 0.015, 0.3)
 print(portfolio.calculate_xi())
+print("Finished in " + str(time.time() - start) + "sec")
+
 #x = [0]*5
 #res = [0]*5
 #for i in range(0, 5, 0.1):
