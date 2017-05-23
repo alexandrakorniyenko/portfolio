@@ -5,6 +5,8 @@ import numpy as np
 from scipy.optimize import fsolve
 from math import *
 from sympy import *
+from itertools import *
+
 import time
 
 KO =np.array([43.59,   43.15,   42.44,   41.96,  41.57, 41.46,  40.3,    42.40,   42.32,   43.43,   43.63,   45.33,   44.60])
@@ -53,7 +55,7 @@ class Portfolio():
             return self.x_betta()
 
     def x_betta_eq0(self):
-        print(linprog(self.r, [(-1) * self.r1], (-1) * self.r_star, [[1] * self.r.size], 1))
+        print(linprog(self.r, [(-1) * self.r1], -self.r_star, [[1] * self.r.size], 1))
 
     def x_betta_eq1(self):
         print(linprog(self.r, [self.r1], self.r_star, [[1] * self.x.size], 1))
@@ -99,7 +101,7 @@ class Portfolio():
            return f
 
     def func_x0_2(self, x, r1,r2 ,r11, r12, r21, r22, b):
-           f = (1/((x*r21+(1-x)*r22 - (x*r11+(1-x)*r12))))*((self.r_star-(x*r11+(1-x)*r12)-(self.r_star-(x*r1+(1-x)*r2))*log((x*r1+(1-x)*r2-self.r_star)/(x*r21+(1-x)*r22 - (x*r11+(1-x)*r12))))) - b
+           f = (1/((x*r21+(1-x)*r22 - (x*r11+(1-x)*r12))))*((self.r_star-(x*r11+(1-x)*r12)-(self.r_star-(x*r1+(1-x)*r2))*log((x*r1+(1-x)*r2-self.r_star)/(x*r1+(1-x)*r2 - (x*r11+(1-x)*r12))))) - b
            return f
 
     def diff_betta(self,x):
@@ -220,7 +222,7 @@ class Portfolio():
         r22 = self.r2[D]
         x = symbols('x')
         F = (self.func_x0(x, r1, r2, r11, r12, r21, r22, self.bet))
-        x0 = nsolve(F, 0.1, tol = 2.37661e-06)
+        x0 = nsolve(F, 0.1, tol = 2.37661e-04)
         return ( 1-x0.real, x0.real, D, d)
 
     def calculate_X0_2(self):
@@ -241,16 +243,16 @@ class Portfolio():
         r22 = self.r2[D]
         x = symbols('x')
         F2 = (self.func_x0_2(x, r1, r2, r11, r12, r21, r22, self.bet))
-        x0_2 = nsolve(F2, 0.1, tol = 9.94317e-03)
-        return (1 - x0_2.real, x0_2.real, d, D)
+        x0_2 = nsolve(F2, 0.1, tol = 9.94317e-04)
+        return (1 - x0_2.real, x0_2.real, D, d)
 
 
     def x_betta(self):
-        if self.bet < 0.52:
+        if self.bet < 0.5:
             x0 = [0] * self.r.size
-            x0 = [0.2,0.1,0.7]
-            # x0[self.calculate_X0()[2]] = self.calculate_X0()[0]
-            # x0[self.calculate_X0()[3]] = self.calculate_X0()[1]
+            #x0 = [0.2,0.1,0.7]
+            x0[self.calculate_X0()[2]] = self.calculate_X0()[0]
+            x0[self.calculate_X0()[3]] = self.calculate_X0()[1]
             print(x0)
             print(self.calculate_X0())
             cons = ({'type': 'eq',
@@ -286,6 +288,7 @@ class Portfolio():
             res = minimize(self.sub_f, x0, jac=self.diff_f, constraints=cons, method='SLSQP', options={'ftol': 1e-4, 'disp': True, "eps":1e-4, "maxiter": 10000})
             return(res)
         else:
+            #x0 = np.array([ 0.51484726,  0.25580718,  0.22934556])
             x0 = [0]*self.r.size
             x0[self.calculate_X0_2()[3]] = self.calculate_X0_2()[0]
             x0[self.calculate_X0_2()[2]] = self.calculate_X0_2()[1]
@@ -323,13 +326,73 @@ class Portfolio():
 
 
             res1 = minimize(self.sub_f, x0, jac=self.diff_f, constraints=cons1, method='SLSQP',
-                       options={'ftol': 1e-4, 'disp': True, "eps": 1e-1, "maxiter": 10000})
+                       options={'ftol': 1e-2, 'disp': True, "eps": 1e-1, "maxiter": 100000})
             return(res1)
+    def create_x(self,n):
+        r = np.array([])
+        a = np.array([])
+        b = np.array([])
+        c = np.array([[]])
+        x = [0]*100
+        for i in range(0, 100):
+            x[i] = i*0.01
+        a = list(combinations_with_replacement(x, n))
+        for i in range(0, len(a)):
+            if sum(a[i]) == 1:
+                b = (list(permutations(a[i])))
+                if(len(r) == 0):
+                    r = [b]
+                else:
+                    r = np.concatenate((r, [b]), axis=0)
 
-start = time.time()
-portfolio = Portfolio([0, 0, 0], [r_KO, r_APL, r_MSFT], [r1_KO, r1_APL, r1_MSFT], [r2_KO, r2_APL, r2_MSFT], 0.015, 0.3)
-print(portfolio.calculate_xi())
-print("Finished in " + str(time.time() - start) + "sec")
+        np.set_printoptions(threshold=np.nan)
+
+        resArr = []
+        for i in r.tolist():
+            resArr += [np.array(j) for j in i]
+
+        # resArrD = []
+        # for i in r.tolist():
+        #     resArrD += [np.array(j) for j in i]
+
+        res = pd.DataFrame()
+        res['X'] = resArr
+        res['Exp_min_profit'] = [np.dot(i, self.r1) for i in res['X']]
+        res['Exp_max_profit'] = [np.dot(i, self.r2) for i in res['X']]
+        res['Exp_profit'] = [np.dot(i, self.r) for i in res['X']]
+        res['betta1'] = res['X'].apply(self.find_betta)
+        #res['delta'] = [np.dot(i, (self.r2 - self.r1)) for i in res ['x']]
+        res['betta1'] = [round(float(str(i)), 2) if (str(i)[-4] != "I") else None for i in res['betta1']]
+        res = res.sort_values('betta1Plot')
+        # res['betta2Plot'] = [float(str(i)) if (str(i)[-4] != "I") else None for i in res['betta2']]
+        # res1 = res.sort_values('betta2Plot')
+        plt.scatter(x=list(res['betta1Plot']), y = list(res['Exp_profit']))
+        #plt.scatter(x=list(res['betta2Plot']), y=list(res['Exp_profit']))
+        # plt.show()
+
+
+        # print(res)
+        res2 = res[res['betta1Plot'] == self.bet][res['Exp_profit'] > self.r_star][res['Exp_min_profit'] < self.r_star].sort_values('Exp_profit')
+        print(res2.loc[res2.index[-1]])
+
+        # print(res1)
+        # print(r)
+        return res
+
+    #def Optimal_portfolio(self):
+
+
+
+#start = time.time()
+
+
+portfolio = Portfolio([0, 0, 0,0], [r_KO, r_APL, r_MSFT, r_INTL], [r1_KO, r1_APL, r1_MSFT, r1_INTL], [r2_KO, r2_APL, r2_MSFT, r2_INTL], 0.02, 0.4)
+portfolio.create_x(4)
+# print(portfolio.create_x(3))
+#print(portfolio.create_x(3))
+
+#print(portfolio.calculate_xi())
+#print("Finished in " + str(time.time() - start) + "sec")
 
 #x = [0]*5
 #res = [0]*5
@@ -348,4 +411,17 @@ print("Finished in " + str(time.time() - start) + "sec")
 #print(portfolio.calculate_X0_2())
 #print(portfolio.betta())
 
-
+# x = [0]*9
+# res = [0]*9
+# for i in range(0, 9, 1):
+#     x[i] = 0.04 + i*0.1
+#     start = time.time()
+#     portfolio = Portfolio([0, 0, 0], [r_KO, r_MSFT, r_APL], [r1_KO, r1_MSFT, r1_APL], [r2_KO,r2_MSFT,r2_APL], 0.02,
+#                           x[i])
+#     a = portfolio.x_betta()
+#     print(a)
+#     res[i] = -1*(a.fun)
+#     print("Finished in " + str(time.time() - start) + "sec")
+# print(x, res)
+# plt.plot(x, res)
+# plt.show()
